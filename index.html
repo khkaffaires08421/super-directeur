@@ -1601,5 +1601,19 @@ function restoreData(){
 }
 setupSelects();loadSchool();updateStats();renderStudents();renderGradeForm();renderResults();renderStatistics();fillBulletinStudents();renderCards();
 </script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("/super-directeur/service-worker.js")
+      .then(function () {
+        console.log("SUPER DIRECTEUR : mode hors connexion activé.");
+      })
+      .catch(function (error) {
+        console.error("Erreur d'activation hors connexion :", error);
+      });
+  });
+}
+</script>
 </body>
 </html>
