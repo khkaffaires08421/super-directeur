@@ -137,7 +137,13 @@ footer{text-align:center;padding:20px;color:#667085;font-size:12px}
 <div><label>Rechercher un élève</label><input id="searchStudent" oninput="renderStudents()" placeholder="Nom, prénom, matricule"></div>
 </div>
 <div class="tablewrap" id="studentTable"></div>
-<div class="actions no-print"><button onclick="printElement('studentPrint')">Imprimer la liste</button></div>
+<div class="actions no-print">
+<button onclick="printElement('studentPrint')">Imprimer la liste</button>
+<button class="good" onclick="exportStudentList('excel')">Exporter Excel</button>
+<button onclick="exportStudentList('word')">Exporter Word</button>
+<button onclick="exportStudentList('pdf')">Exporter PDF</button>
+</div>
+<p class="small">Les exports utilisent la classe sélectionnée (ou toute l’école) et la recherche en cours. Excel est fourni au format CSV compatible avec Excel.</p>
 </div>
 </section>
 
@@ -340,6 +346,8 @@ function setupSelects(){
   sel.innerHTML=CLASSES.map(c=>`<option value="${c}">${c}</option>`).join("");
   if(CLASSES.includes(old))sel.value=old;
  });
+ const filter=document.getElementById("filterClasse");
+ if(filter){filter.insertAdjacentHTML("afterbegin",'<option value="TOUTES">Toutes les classes</option>');if(!filter.value)filter.value="CP1";}
 }
 function updateStats(){const el=document.getElementById("statEleves");if(el)el.textContent=db.students.length;}
 document.querySelectorAll("#nav button").forEach(b=>b.addEventListener("click",()=>{
@@ -386,10 +394,37 @@ function saveStudent(){
  }
  persist();clearStudentForm();renderStudents();alert("Élève enregistré.");
 }
-function renderStudents(){
+function getStudentExportList(){
  const cl=val("filterClasse"),q=val("searchStudent").toLowerCase();
- const list=db.students.filter(s=>s.classe===cl&&[s.nom,s.prenom,s.matricule].some(v=>(v||"").toLowerCase().includes(q))).sort((a,b)=>a.nom.localeCompare(b.nom,"fr"));
- document.getElementById("studentTable").innerHTML=`<div id="studentPrint"><h3>Liste des élèves — ${esc(cl)} — 2026-2027</h3><p>${esc(db.school.name)}</p><div class="tablewrap"><table><thead><tr><th>N°</th><th>Photo</th><th>Nom et prénoms</th><th>Sexe</th><th>Date naissance</th><th>Matricule</th><th class="no-print">Actions</th></tr></thead><tbody>${list.map((s,i)=>`<tr><td>${i+1}</td><td>${s.photo?`<img class="photo" src="${s.photo}">`:"—"}</td><td>${esc(s.nom)} ${esc(s.prenom)}</td><td>${esc(s.sexe)}</td><td>${esc(s.date)}</td><td>${esc(s.matricule)}</td><td class="no-print"><button onclick="editStudent('${s.id}')">Modifier</button> <button class="danger" onclick="deleteStudent('${s.id}')">Supprimer</button></td></tr>`).join("")||'<tr><td colspan="7">Aucun élève trouvé.</td></tr>'}</tbody></table></div></div>`;
+ return db.students.filter(s=>(cl==="TOUTES"||s.classe===cl)&&[s.nom,s.prenom,s.matricule,s.classe].some(v=>(v||"").toLowerCase().includes(q))).sort((a,b)=>a.classe.localeCompare(b.classe,"fr")||a.nom.localeCompare(b.nom,"fr")||a.prenom.localeCompare(b.prenom,"fr"));
+}
+function renderStudents(){
+ const cl=val("filterClasse")||"CP1",q=val("searchStudent").toLowerCase();
+ const list=getStudentExportList();
+ const title=cl==="TOUTES"?"Toutes les classes":cl;
+ document.getElementById("studentTable").innerHTML=`<div id="studentPrint"><h3>Liste des élèves — ${esc(title)} — 2026-2027</h3><p>${esc(db.school.name)}</p><div class="tablewrap"><table><thead><tr><th>N°</th><th>Classe</th><th>Photo</th><th>Nom et prénoms</th><th>Sexe</th><th>Date naissance</th><th>Matricule</th><th class="no-print">Actions</th></tr></thead><tbody>${list.map((s,i)=>`<tr><td>${i+1}</td><td>${esc(s.classe)}</td><td>${s.photo?`<img class="photo" src="${s.photo}">`:"—"}</td><td>${esc(s.nom)} ${esc(s.prenom)}</td><td>${esc(s.sexe)}</td><td>${esc(s.date)}</td><td>${esc(s.matricule)}</td><td class="no-print"><button onclick="editStudent('${s.id}')">Modifier</button> <button class="danger" onclick="deleteStudent('${s.id}')">Supprimer</button></td></tr>`).join("")||'<tr><td colspan="8">Aucun élève trouvé.</td></tr>'}</tbody></table></div></div>`;
+}
+function exportStudentList(format){
+ const list=getStudentExportList();
+ if(!list.length){alert("Aucun élève à exporter. Vérifie la classe ou la recherche.");return;}
+ const cl=val("filterClasse")==="TOUTES"?"Toutes_les_classes":val("filterClasse");
+ const title=val("filterClasse")==="TOUTES"?"Toutes les classes":val("filterClasse");
+ const headers=["N°","Classe","Matricule","Nom","Prénoms","Sexe","Date de naissance"];
+ const rows=list.map((s,i)=>[i+1,s.classe,s.matricule||"",s.nom||"",s.prenom||"",s.sexe||"",s.date||""]);
+ const escCell=v=>esc(v);
+ const table='<table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:10pt"><thead><tr>'+headers.map(h=>'<th style="background:#e8eef5">'+escCell(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(v=>'<td>'+escCell(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
+ const heading='<h2 style="text-align:center">LISTE DES ÉLÈVES — '+escCell(title)+' — 2026-2027</h2><p><b>École :</b> '+escCell(db.school.name||'')+' &nbsp; <b>IEPP :</b> '+escCell(db.school.iepp||'')+' &nbsp; <b>DRENA :</b> '+escCell(db.school.drena||'')+'</p><p>Effectif : '+list.length+' élève(s)</p>';
+ const html='<!doctype html><html><head><meta charset="utf-8"><title>Liste des élèves</title></head><body>'+heading+table+'</body></html>';
+ const filename='Liste_eleves_'+cl+'_2026-2027';
+ if(format==='excel'){
+  const csv='\uFEFF'+[headers,...rows].map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ }else if(format==='word'){
+  const blob=new Blob(['\ufeff',html],{type:'application/msword'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename+'.doc';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ }else if(format==='pdf'){
+  const w=window.open('','_blank');if(!w){alert('Autorise les fenêtres pop-up pour enregistrer en PDF.');return;}
+  w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Liste des élèves</title><style>@page{size:A4 portrait;margin:12mm}body{font-family:Arial,sans-serif;color:#111}table{width:100%;border-collapse:collapse;font-size:10pt}th,td{border:1px solid #444;padding:5px;text-align:left}th{background:#e8eef5}h2{font-size:15pt}</style></head><body>'+heading+table+'<script>window.onload=function(){setTimeout(function(){window.focus();window.print();},300)};<\/script></body></html>');w.document.close();
+ }
 }
 function editStudent(studentId){
  const s=db.students.find(x=>x.id===studentId);if(!s)return;
