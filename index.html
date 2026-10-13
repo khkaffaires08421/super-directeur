@@ -3,9 +3,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f766e">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SUPER DIRECTEUR — 2026-2027</title>
 <style>
 :root{--bleu:#123b67;--vert:#087f70;--fond:#f2f6fb;--orange:#f59e0b}
@@ -1167,7 +1165,9 @@ function printAllAnnualBulletins(){
       h2,p{text-align:center}
       table{border-collapse:collapse;width:100%;margin:15px 0}
       th,td{border:1px solid #555;padding:7px;text-align:left}
-      .signatures{display:flex;justify-content:space-between;margin-top:45px}
+      .signatures{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px;break-inside:avoid;page-break-inside:avoid}
+      .signatures div{min-height:95px;border:1px solid #555;padding:8px;text-align:center;font-weight:bold}
+      .bulletin table{break-inside:avoid;page-break-inside:avoid}
     </style></head><body>${pages}
     <script>window.onload=()=>{window.focus();window.print();};<\/script>
     </body></html>`);
@@ -1257,8 +1257,12 @@ if(e==="ANNUEL"){
  table{border-collapse:collapse;width:100%;margin:12px 0}
  th,td{border:1px solid #555;padding:6px;text-align:left}
  th{background:#eef2f6}
- .signatures{display:flex;justify-content:space-between;margin-top:45px;text-align:center}
- .signatures div{width:45%}
+ .signatures{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px;break-inside:avoid;page-break-inside:avoid}
+ .signatures div{width:auto;min-height:95px;border:1px solid #555;padding:8px;text-align:center;font-weight:bold;font-size:10pt}
+ .bulletin{min-height:260mm;position:relative}
+ .bulletin table{break-inside:avoid;page-break-inside:avoid}
+ .bulletin p{margin:7px 0}
+ @media print{.bulletin{break-after:page;page-break-after:always}.bulletin:last-child{break-after:auto;page-break-after:auto}}
  </style></head><body>${pages}
  <script>window.onload=()=>{window.focus();window.print();};<\/script>
  </body></html>`);
@@ -1373,207 +1377,159 @@ function renderCards(){
 
 function printElement(id){
   const el = document.getElementById(id);
-
-  if(!el){
+  if (!el) {
     alert("Aucun document à imprimer.");
     return;
   }
 
   const printWindow = window.open("", "_blank");
-
-  if(!printWindow){
+  if (!printWindow) {
     alert("Autorise les fenêtres contextuelles pour imprimer.");
     return;
   }
 
   const isCards = id === "cardsPrint";
-
+  const isBulletin = id === "bulletinPrint";
   const styles = `
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; color: #172033; font-size: 10pt; }
+    img { max-width: 100%; }
+    table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+    th, td { border: 1px solid #555; padding: 5px; text-align: left; }
+    th { background: #eaf0f7; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    @page { size: A4 portrait; margin: 10mm; }
 
-    body {
-      font-family: Arial, sans-serif;
-      color: #172033;
-      margin: 0;
-      padding: 8px;
-    }
-
-    img {
-      max-width: 100%;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 11px;
-    }
-
-    th, td {
-      border: 1px solid #777;
-      padding: 5px;
-      text-align: left;
-    }
-
-    th {
-      background: #eaf0f7;
-    }
-
-    @page {
-      size: A4 portrait;
-      margin: 8mm;
-    }
+    ${isBulletin ? `
+      .bulletin-document {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        border: 1px solid #123b67;
+        background: #fff;
+        color: #222;
+        font-family: Arial, sans-serif;
+        font-size: 10pt;
+      }
+      .bulletin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        border-bottom: 2px solid #123b67;
+        padding: 0 0 8px;
+        font-size: 8pt;
+        font-weight: bold;
+      }
+      .header-left, .header-right { width: 48%; }
+      .header-right { text-align: right; }
+      .school-header { text-align: center; padding: 7px 0; }
+      .school-header h2 { color: #123b67; font-size: 16pt; margin: 5px 0; }
+      .school-header h3 {
+        display: inline-block;
+        border: 2px solid #123b67;
+        padding: 5px 14px;
+        margin: 5px 0;
+        color: #123b67;
+        font-size: 12pt;
+      }
+      .school-header p { margin: 3px 0; }
+      .bulletin-document table { width: 100%; border-collapse: collapse; margin: 7px 0; }
+      .bulletin-document th, .bulletin-document td {
+        border: 1px solid #444;
+        padding: 5px 6px;
+        vertical-align: middle;
+      }
+      .student-identity th { background: #f2f5f8; width: 20%; }
+      .student-identity td { width: 30%; }
+      .bulletin-grades th:nth-child(2), .bulletin-grades td:nth-child(2),
+      .bulletin-grades th:nth-child(3), .bulletin-grades td:nth-child(3) { text-align: center; }
+      .total-row, .mean-row { background: #eef4f8; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .bulletin-summary {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        border: 1px solid #777;
+        padding: 4px 10px;
+        margin-top: 7px;
+      }
+      .bulletin-summary p { margin: 3px 0; }
+      .observations {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 12px;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      .observations > div {
+        border: 1px solid #555;
+        min-height: 105px;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+      }
+      .observations > div > b { display: block; text-align: center; font-size: 9pt; }
+      .observation-space {
+        height: 48px;
+        min-height: 48px;
+        border-bottom: 1px dotted #bbb;
+        margin-top: 4px;
+      }
+      .observations p { margin: 5px 0 0; font-size: 9pt; }
+      .bulletin-footer { margin-top: 10px; border-top: 1px solid #aaa; padding-top: 5px; text-align: center; font-size: 8pt; }
+      .bulletin-document, .bulletin-document table, .observations { break-inside: avoid; page-break-inside: avoid; }
+      h2, h3 { text-align: center; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    ` : ""}
 
     ${isCards ? `
-      html, body {
-        width: 194mm;
-        margin: 0;
-        padding: 0;
-      }
-
-      #cardsPrint {
-        width: 194mm;
-        margin: 0;
-        padding: 0;
-      }
-
+      @page { size: A4 portrait; margin: 8mm; }
+      html, body { width: 194mm; margin: 0; padding: 0; }
+      #cardsPrint { width: 194mm; margin: 0; padding: 0; }
       .card-sheet {
-        width: 194mm !important;
-        height: 281mm !important;
+        width: 194mm !important; height: 281mm !important;
         display: grid !important;
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
-        gap: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        break-after: page;
-        page-break-after: always;
-        overflow: hidden;
+        gap: 0 !important; margin: 0 !important; padding: 0 !important;
+        break-after: page; page-break-after: always; overflow: hidden;
       }
-
-      .card-sheet:last-child {
-        break-after: auto;
-        page-break-after: auto;
-      }
-
+      .card-sheet:last-child { break-after: auto; page-break-after: auto; }
       .school-card {
-        display: block !important;
-        width: 100% !important;
-        height: 100% !important;
-        min-width: 0 !important;
-        min-height: 0 !important;
-        margin: 0 !important;
-        padding: 5mm !important;
-        border: 1px dashed #333 !important;
-        border-radius: 2mm;
-        overflow: hidden !important;
-        break-inside: avoid;
-        page-break-inside: avoid;
-        font-family: Arial, sans-serif;
-        background: white !important;
-        color: #172b43 !important;
+        display: block !important; width: 100% !important; height: 100% !important;
+        min-width: 0 !important; min-height: 0 !important; margin: 0 !important;
+        padding: 5mm !important; border: 1px dashed #333 !important;
+        overflow: hidden !important; break-inside: avoid; page-break-inside: avoid;
+        font-family: Arial, sans-serif; background: white !important; color: #172b43 !important;
       }
-
-      .card-heading {
-        text-align: center;
-        border-bottom: 1.5px solid #087f70;
-        padding-bottom: 2mm;
-      }
-
-      .school-name {
-        font-size: 11pt;
-        font-weight: bold;
-      }
-
-      .school-location {
-        font-size: 8pt;
-        margin-top: 1mm;
-      }
-
-      .card-title {
-        font-size: 9pt;
-        font-weight: bold;
-        margin-top: 2mm;
-      }
-
-      .card-body {
-        display: flex !important;
-        align-items: flex-start;
-        gap: 3mm;
-        margin-top: 4mm;
-      }
-
+      .card-heading { text-align: center; border-bottom: 1.5px solid #087f70; padding-bottom: 2mm; }
+      .school-name { font-size: 11pt; font-weight: bold; }
+      .school-location { font-size: 8pt; margin-top: 1mm; }
+      .card-title { font-size: 9pt; font-weight: bold; margin-top: 2mm; }
+      .card-body { display: flex !important; align-items: flex-start; gap: 3mm; margin-top: 4mm; }
       .student-photo {
-        width: 25mm !important;
-        height: 32mm !important;
-        flex: 0 0 25mm !important;
-        border: 1px solid #777;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        font-size: 8pt;
+        width: 25mm !important; height: 32mm !important; flex: 0 0 25mm !important;
+        border: 1px solid #777; display: flex; align-items: center; justify-content: center;
+        overflow: hidden; font-size: 8pt;
       }
-
-      .student-photo img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-
-      .student-info {
-        flex: 1;
-        min-width: 0;
-        font-size: 8.5pt;
-        line-height: 1.8;
-        overflow-wrap: anywhere;
-      }
-
-      .card-footer {
-        display: flex !important;
-        justify-content: space-between;
-        gap: 2mm;
-        margin-top: 3mm;
-        padding-top: 2mm;
-        border-top: 1px solid #bbb;
-        font-size: 7.5pt;
-      }
-
-      body {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-    ` : `
-      body {
-        padding: 8px;
-      }
-
-      h2, h3 {
-        text-align: center;
-      }
-
-      img {
-        max-width: 90px;
-      }
-    `}
+      .student-photo img { width: 100%; height: 100%; object-fit: cover; }
+      .student-info { flex: 1; min-width: 0; font-size: 8.5pt; line-height: 1.8; overflow-wrap: anywhere; }
+      .card-footer { display: flex !important; justify-content: space-between; gap: 2mm; margin-top: 3mm; padding-top: 2mm; border-top: 1px solid #bbb; font-size: 7.5pt; }
+    ` : ""}
   `;
 
   printWindow.document.open();
   printWindow.document.write(
-    '<!doctype html><html lang="fr"><head>' +
-    '<meta charset="utf-8">' +
+    '<!doctype html><html lang="fr"><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width, initial-scale=1">' +
-    '<title>SUPER DIRECTEUR — Impression</title>' +
-    '<style>' + styles + '</style>' +
-    '</head><body>' + el.outerHTML + '</body></html>'
+    '<title>SUPER DIRECTEUR — Impression</title><style>' + styles +
+    '</style></head><body>' + el.outerHTML +
+    '<script>window.onload=function(){setTimeout(function(){window.focus();window.print();},300);};<\/script>' +
+    '</body></html>'
   );
   printWindow.document.close();
-
-  printWindow.onload = function(){
-    printWindow.focus();
-    printWindow.print();
-  };
 }
 function backupData(){
  const data={...db,exportedAt:new Date().toISOString(),app:"SUPER DIRECTEUR",version:1};
@@ -1600,20 +1556,6 @@ function restoreData(){
  reader.readAsText(f);
 }
 setupSelects();loadSchool();updateStats();renderStudents();renderGradeForm();renderResults();renderStatistics();fillBulletinStudents();renderCards();
-</script>
-
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", function () {
-    navigator.serviceWorker.register("/super-directeur/service-worker.js")
-      .then(function () {
-        console.log("SUPER DIRECTEUR : mode hors connexion activé.");
-      })
-      .catch(function (error) {
-        console.error("Erreur d'activation hors connexion :", error);
-      });
-  });
-}
 </script>
 </body>
 </html>
