@@ -38,6 +38,13 @@ td input{min-width:75px}
 .hidden{display:none!important}
 .notice{background:#fff6df;border-left:4px solid var(--orange);padding:12px;margin:12px 0}
 .photo{width:65px;height:75px;object-fit:cover;border:1px solid #ddd}
+.bulletin-student-block{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:10px;align-items:start}
+.bulletin-student-photo{width:88px;height:105px;border:1px solid #777;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:10px;color:#777;text-align:center}
+.bulletin-student-photo img{width:100%;height:100%;object-fit:cover}
+.official-signature{display:flex;justify-content:center;align-items:center;gap:8px;min-height:35px}
+.official-signature img{max-width:70px;max-height:45px;object-fit:contain}
+.official-signature .stamp-img{max-width:55px;max-height:55px}
+@media print{.bulletin-student-block{grid-template-columns:minmax(0,1fr) 25mm;gap:3mm}.bulletin-student-photo{width:25mm;height:32mm;font-size:8pt}}
 footer{text-align:center;padding:20px;color:#667085;font-size:12px}
 @media print{
  body{background:white}
@@ -105,8 +112,12 @@ footer{text-align:center;padding:20px;color:#667085;font-size:12px}
 <div><label>Nom du directeur</label><input id="directorName" placeholder="Nom et prénoms"></div>
 <div><label>Contact de l'école</label><input id="schoolPhone" placeholder="Téléphone"></div>
 <div><label>Localité</label><input id="schoolTown" placeholder="Village / ville"></div>
+<div><label>Cachet officiel de l'école (PNG/JPG)</label><input type="file" id="schoolStampFile" accept="image/png,image/jpeg"></div>
+<div><label>Signature du directeur (PNG/JPG)</label><input type="file" id="directorSignatureFile" accept="image/png,image/jpeg"></div>
 </div>
-<div class="actions"><button class="good" onclick="saveSchool()">Enregistrer les informations</button></div>
+<p class="small">Images de moins de 400 Ko chacune. Elles seront conservées sur cet appareil et incluses dans la sauvegarde JSON.</p>
+<div class="grid"><div id="stampPreviewBox" class="small"></div><div id="signaturePreviewBox" class="small"></div></div>
+<div class="actions"><button class="good" onclick="saveSchool()">Enregistrer les informations</button><button onclick="clearSchoolImage('stamp')">Retirer le cachet</button><button onclick="clearSchoolImage('signature')">Retirer la signature</button></div>
 <p id="schoolMsg" class="small"></p>
 </div>
 </section>
@@ -120,6 +131,7 @@ footer{text-align:center;padding:20px;color:#667085;font-size:12px}
 <div><label>Prénoms</label><input id="studentPrenom" placeholder="Prénoms"></div>
 <div><label>Sexe</label><select id="studentSexe"><option value="">Choisir</option><option>Masculin</option><option>Féminin</option></select></div>
 <div><label>Date de naissance</label><input type="date" id="studentDate"></div>
+<div><label>Lieu de naissance</label><input id="studentBirthPlace" placeholder="Ville / village de naissance"></div>
 <div><label>Classe</label><select id="studentClasse" class="classSelect"></select></div>
 <div><label>Matricule (facultatif)</label><input id="studentMatricule"></div>
 <div><label>Photo de l'élève (facultatif)</label><input type="file" id="studentPhoto" accept="image/jpeg,image/png"></div>
@@ -285,7 +297,7 @@ footer{text-align:center;padding:20px;color:#667085;font-size:12px}
 "use strict";
 const CLASSES=["CP1","CP2","CE1","CE2","CM1","CM2"];
 const DBKEY="SUPER_DIRECTEUR_2026_2027_V1";
-const defaultDB={school:{name:"",iepp:"",drena:"",director:"",phone:"",town:""},students:[],grades:{}};
+const defaultDB={school:{name:"",iepp:"",drena:"",director:"",phone:"",town:"",stamp:"",directorSignature:""},students:[],grades:{}};
 let db=loadDB();
 let pendingPhoto=null;
 
@@ -361,18 +373,49 @@ document.querySelectorAll("#nav button").forEach(b=>b.addEventListener("click",(
  if(b.dataset.page==="cartes")renderCards();
 }));
 function saveSchool(){
- db.school={name:val("schoolName"),iepp:val("schoolIepp"),drena:val("schoolDrena"),director:val("directorName"),phone:val("schoolPhone"),town:val("schoolTown")};
- persist();document.getElementById("schoolMsg").textContent="Informations enregistrées.";
+ db.school={...defaultDB.school,...db.school,name:val("schoolName"),iepp:val("schoolIepp"),drena:val("schoolDrena"),director:val("directorName"),phone:val("schoolPhone"),town:val("schoolTown")};
+ persist();renderSchoolImagePreviews();document.getElementById("schoolMsg").textContent="Informations enregistrées.";
 }
 function loadSchool(){
+ db.school={...defaultDB.school,...(db.school||{})};
  setval("schoolName",db.school.name);setval("schoolIepp",db.school.iepp);
  setval("schoolDrena",db.school.drena);setval("directorName",db.school.director);
  setval("schoolPhone",db.school.phone);setval("schoolTown",db.school.town);
+ renderSchoolImagePreviews();
 }
+function renderSchoolImagePreviews(){
+ const stamp=document.getElementById("stampPreviewBox"),sig=document.getElementById("signaturePreviewBox");
+ if(stamp)stamp.innerHTML=db.school.stamp?'<b>Cachet enregistré :</b><br><img alt="Cachet" style="max-width:150px;max-height:90px;object-fit:contain" src="'+db.school.stamp+'">':'Aucun cachet importé.';
+ if(sig)sig.innerHTML=db.school.directorSignature?'<b>Signature enregistrée :</b><br><img alt="Signature" style="max-width:180px;max-height:70px;object-fit:contain" src="'+db.school.directorSignature+'">':'Aucune signature importée.';
+}
+function clearSchoolImage(kind){
+ if(kind==="stamp")db.school.stamp="";
+ else db.school.directorSignature="";
+ persist();renderSchoolImagePreviews();
+ if(kind==="stamp")document.getElementById("schoolStampFile").value="";
+ else document.getElementById("directorSignatureFile").value="";
+}
+function readSchoolImage(inputId,field){
+ const input=document.getElementById(inputId);
+ input.addEventListener("change",e=>{
+  const f=e.target.files[0];if(!f)return;
+  if(!/^image\/(png|jpeg)$/.test(f.type)){alert("Choisis une image PNG ou JPG.");input.value="";return;}
+  if(f.size>400000){alert("Image trop lourde. Choisis une image de moins de 400 Ko.");input.value="";return;}
+  const reader=new FileReader();
+  reader.onload=()=>{
+   db.school={...defaultDB.school,...db.school,[field]:reader.result};
+   try{persist();renderSchoolImagePreviews();document.getElementById("schoolMsg").textContent="Image enregistrée.";}
+   catch(err){alert("Le stockage est plein. Réduis la taille de l'image puis réessaie.");}
+  };
+  reader.readAsDataURL(f);
+ });
+}
+readSchoolImage("schoolStampFile","stamp");
+readSchoolImage("directorSignatureFile","directorSignature");
 function val(id){return document.getElementById(id).value.trim();}
 function setval(id,v){document.getElementById(id).value=v||"";}
 function clearStudentForm(){
- ["editId","studentNom","studentPrenom","studentDate","studentMatricule"].forEach(x=>setval(x,""));
+ ["editId","studentNom","studentPrenom","studentDate","studentBirthPlace","studentMatricule"].forEach(x=>setval(x,""));
  setval("studentSexe","");pendingPhoto=null;document.getElementById("studentPhoto").value="";
 }
 document.getElementById("studentPhoto").addEventListener("change",e=>{
@@ -387,10 +430,10 @@ function saveStudent(){
  if(duplicate&&!confirm("Un élève de cette classe porte déjà ce nom. Enregistrer quand même ?"))return;
  if(edit){
   const s=db.students.find(x=>x.id===edit);if(!s)return;
-  Object.assign(s,{nom,prenom,classe,sexe:val("studentSexe"),date:val("studentDate"),matricule:val("studentMatricule")});
+  Object.assign(s,{nom,prenom,classe,sexe:val("studentSexe"),date:val("studentDate"),birthPlace:val("studentBirthPlace"),matricule:val("studentMatricule")});
   if(pendingPhoto)s.photo=pendingPhoto;
  }else{
-  db.students.push({id:id(),nom,prenom,classe,sexe:val("studentSexe"),date:val("studentDate"),matricule:val("studentMatricule"),photo:pendingPhoto||""});
+  db.students.push({id:id(),nom,prenom,classe,sexe:val("studentSexe"),date:val("studentDate"),birthPlace:val("studentBirthPlace"),matricule:val("studentMatricule"),photo:pendingPhoto||""});
  }
  persist();clearStudentForm();renderStudents();alert("Élève enregistré.");
 }
@@ -402,15 +445,15 @@ function renderStudents(){
  const cl=val("filterClasse")||"CP1",q=val("searchStudent").toLowerCase();
  const list=getStudentExportList();
  const title=cl==="TOUTES"?"Toutes les classes":cl;
- document.getElementById("studentTable").innerHTML=`<div id="studentPrint"><h3>Liste des élèves — ${esc(title)} — 2026-2027</h3><p>${esc(db.school.name)}</p><div class="tablewrap"><table><thead><tr><th>N°</th><th>Classe</th><th>Photo</th><th>Nom et prénoms</th><th>Sexe</th><th>Date naissance</th><th>Matricule</th><th class="no-print">Actions</th></tr></thead><tbody>${list.map((s,i)=>`<tr><td>${i+1}</td><td>${esc(s.classe)}</td><td>${s.photo?`<img class="photo" src="${s.photo}">`:"—"}</td><td>${esc(s.nom)} ${esc(s.prenom)}</td><td>${esc(s.sexe)}</td><td>${esc(s.date)}</td><td>${esc(s.matricule)}</td><td class="no-print"><button onclick="editStudent('${s.id}')">Modifier</button> <button class="danger" onclick="deleteStudent('${s.id}')">Supprimer</button></td></tr>`).join("")||'<tr><td colspan="8">Aucun élève trouvé.</td></tr>'}</tbody></table></div></div>`;
+ document.getElementById("studentTable").innerHTML=`<div id="studentPrint"><h3>Liste des élèves — ${esc(title)} — 2026-2027</h3><p>${esc(db.school.name)}</p><div class="tablewrap"><table><thead><tr><th>N°</th><th>Classe</th><th>Photo</th><th>Nom et prénoms</th><th>Sexe</th><th>Date naissance</th><th>Lieu naissance</th><th>Matricule</th><th class="no-print">Actions</th></tr></thead><tbody>${list.map((s,i)=>`<tr><td>${i+1}</td><td>${esc(s.classe)}</td><td>${s.photo?`<img class="photo" src="${s.photo}">`:"—"}</td><td>${esc(s.nom)} ${esc(s.prenom)}</td><td>${esc(s.sexe)}</td><td>${esc(s.date)}</td><td>${esc(s.birthPlace||"—")}</td><td>${esc(s.matricule)}</td><td class="no-print"><button onclick="editStudent('${s.id}')">Modifier</button> <button class="danger" onclick="deleteStudent('${s.id}')">Supprimer</button></td></tr>`).join("")||'<tr><td colspan="9">Aucun élève trouvé.</td></tr>'}</tbody></table></div></div>`;
 }
 function exportStudentList(format){
  const list=getStudentExportList();
  if(!list.length){alert("Aucun élève à exporter. Vérifie la classe ou la recherche.");return;}
  const cl=val("filterClasse")==="TOUTES"?"Toutes_les_classes":val("filterClasse");
  const title=val("filterClasse")==="TOUTES"?"Toutes les classes":val("filterClasse");
- const headers=["N°","Classe","Matricule","Nom","Prénoms","Sexe","Date de naissance"];
- const rows=list.map((s,i)=>[i+1,s.classe,s.matricule||"",s.nom||"",s.prenom||"",s.sexe||"",s.date||""]);
+ const headers=["N°","Classe","Matricule","Nom","Prénoms","Sexe","Date de naissance","Lieu de naissance"];
+ const rows=list.map((s,i)=>[i+1,s.classe,s.matricule||"",s.nom||"",s.prenom||"",s.sexe||"",s.date||"",s.birthPlace||""]);
  const escCell=v=>esc(v);
  const table='<table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:10pt"><thead><tr>'+headers.map(h=>'<th style="background:#e8eef5">'+escCell(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(v=>'<td>'+escCell(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
  const heading='<h2 style="text-align:center">LISTE DES ÉLÈVES — '+escCell(title)+' — 2026-2027</h2><p><b>École :</b> '+escCell(db.school.name||'')+' &nbsp; <b>IEPP :</b> '+escCell(db.school.iepp||'')+' &nbsp; <b>DRENA :</b> '+escCell(db.school.drena||'')+'</p><p>Effectif : '+list.length+' élève(s)</p>';
@@ -429,7 +472,7 @@ function exportStudentList(format){
 function editStudent(studentId){
  const s=db.students.find(x=>x.id===studentId);if(!s)return;
  setval("editId",s.id);setval("studentNom",s.nom);setval("studentPrenom",s.prenom);
- setval("studentClasse",s.classe);setval("studentSexe",s.sexe);setval("studentDate",s.date);setval("studentMatricule",s.matricule);
+ setval("studentClasse",s.classe);setval("studentSexe",s.sexe);setval("studentDate",s.date);setval("studentBirthPlace",s.birthPlace||"");setval("studentMatricule",s.matricule);
  pendingPhoto=null;document.getElementById("studentPhoto").value="";
  window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -822,30 +865,17 @@ if(e==="ANNUEL"){
      <p><b>ANNÉE SCOLAIRE 2026-2027</b></p>
    </div>
 
-   <table class="student-identity">
-     <tbody>
-       <tr>
-         <th>Nom et prénoms</th>
-         <td>${esc(s.nom)} ${esc(s.prenom)}</td>
-         <th>Classe</th>
-         <td>${esc(c)}</td>
-       </tr>
-       <tr>
-         <th>Matricule</th>
-         <td>${esc(s.matricule||"—")}</td>
-         <th>Sexe</th>
-         <td>${esc(s.sexe||"—")}</td>
-       </tr>
-       <tr>
-         <th>Date de naissance</th>
-         <td>${esc(s.date||"—")}</td>
-         <th>Évaluation</th>
-         <td>${esc(e)}</td>
-       </tr>
-     </tbody>
-   </table>
+   <div class="bulletin-student-block">
+      <table class="student-identity"><tbody>
+        <tr><th>Nom et prénoms</th><td>${esc(s.nom)} ${esc(s.prenom)}</td><th>Classe</th><td>${esc(c)}</td></tr>
+        <tr><th>Matricule</th><td>${esc(s.matricule||"—")}</td><th>Sexe</th><td>${esc(s.sexe||"—")}</td></tr>
+        <tr><th>Date de naissance</th><td>${esc(s.date||"—")}</td><th>Lieu de naissance</th><td>${esc(s.birthPlace||"—")}</td></tr>
+        <tr><th>Évaluation</th><td colspan="3">${esc(e)}</td></tr>
+      </tbody></table>
+      <div class="bulletin-student-photo">${s.photo?`<img src="${s.photo}" alt="Photo de l'élève">`:"PHOTO"}</div>
+    </div>
 
-   <table class="bulletin-grades">
+    <table class="bulletin-grades">
      <thead>
        <tr>
          <th>MATIÈRES</th>
@@ -1088,14 +1118,14 @@ function renderAnnualBulletin(){
       <p><b>ANNÉE SCOLAIRE 2026-2027</b></p>
     </div>
 
-    <table class="student-identity">
-      <tr><th>Élève</th>
-      <td>${esc(s.nom)} ${esc(s.prenom)}</td>
-      <th>Classe</th><td>${esc(c)}</td></tr>
-      <tr><th>Matricule</th>
-      <td>${esc(s.matricule||"—")}</td>
-      <th>Sexe</th><td>${esc(s.sexe||"—")}</td></tr>
-    </table>
+    <div class="bulletin-student-block">
+      <table class="student-identity">
+        <tr><th>Élève</th><td>${esc(s.nom)} ${esc(s.prenom)}</td><th>Classe</th><td>${esc(c)}</td></tr>
+        <tr><th>Matricule</th><td>${esc(s.matricule||"—")}</td><th>Sexe</th><td>${esc(s.sexe||"—")}</td></tr>
+        <tr><th>Date de naissance</th><td>${esc(s.date||"—")}</td><th>Lieu de naissance</th><td>${esc(s.birthPlace||"—")}</td></tr>
+      </table>
+      <div class="bulletin-student-photo">${s.photo?`<img src="${s.photo}" alt="Photo de l'élève">`:"PHOTO"}</div>
+    </div>
 
     <table class="bulletin-grades">
       <thead><tr>
@@ -1124,7 +1154,10 @@ function renderAnnualBulletin(){
       </div>
       <div><b>OBSERVATIONS DU DIRECTEUR</b>
         <div class="observation-space"></div>
-        <p>Signature et cachet</p>
+        <div class="official-signature">
+          ${db.school.directorSignature?`<img src="${db.school.directorSignature}" alt="Signature du directeur">`:""}
+          ${db.school.stamp?`<img class="stamp-img" src="${db.school.stamp}" alt="Cachet de l'école">`:""}
+        </div>
         <p>${esc(db.school.director||"")}</p>
       </div>
     </div>
@@ -1160,7 +1193,10 @@ function printAllAnnualBulletins(){
       <p style="text-align:center">BULLETIN ANNUEL — 2026-2027</p>
       <p><b>Classe :</b> ${esc(c)}
       &nbsp; <b>Élève :</b> ${esc(s.nom)} ${esc(s.prenom)}</p>
-      <p><b>Matricule :</b> ${esc(s.matricule||"—")}</p>
+      <div class="student-info-print"><div>
+        <p><b>Matricule :</b> ${esc(s.matricule||"—")}</p>
+        <p><b>Date de naissance :</b> ${esc(s.date||"—")} &nbsp; <b>Lieu :</b> ${esc(s.birthPlace||"—")}</p>
+      </div><div class="print-student-photo">${s.photo?`<img src="${s.photo}" alt="Photo">`:"PHOTO"}</div></div>
       <table><thead><tr>
         <th>Évaluation</th><th>Moyenne</th><th>Échelle</th>
       </tr></thead><tbody>
@@ -1178,7 +1214,10 @@ function printAllAnnualBulletins(){
       <p>Observation du directeur : ________________________</p>
       <div class="signatures">
         <div>Signature du maître</div>
-        <div>Signature et cachet du directeur</div>
+        <div>Signature et cachet du directeur
+          <div class="official-signature">${db.school.directorSignature?`<img src="${db.school.directorSignature}" alt="Signature">`:""}${db.school.stamp?`<img class="stamp-img" src="${db.school.stamp}" alt="Cachet">`:""}</div>
+          <p>${esc(db.school.director||"")}</p>
+        </div>
       </div>
     </section>`;
   }).join("");
@@ -1201,7 +1240,13 @@ function printAllAnnualBulletins(){
       table{border-collapse:collapse;width:100%;margin:15px 0}
       th,td{border:1px solid #555;padding:7px;text-align:left}
       .signatures{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px;break-inside:avoid;page-break-inside:avoid}
-      .signatures div{min-height:95px;border:1px solid #555;padding:8px;text-align:center;font-weight:bold}
+            .signatures div{min-height:95px;border:1px solid #555;padding:8px;text-align:center;font-weight:bold}
+      .student-info-print{display:grid;grid-template-columns:1fr 25mm;gap:4mm;align-items:start}
+      .print-student-photo{width:25mm;height:32mm;border:1px solid #777;display:flex;align-items:center;justify-content:center;font-size:8pt;overflow:hidden}
+      .print-student-photo img{width:100%;height:100%;object-fit:cover}
+      .official-signature{display:flex;justify-content:center;align-items:center;gap:5px;min-height:35px}
+      .official-signature img{max-width:70px;max-height:45px;object-fit:contain}
+      .official-signature .stamp-img{max-width:50px;max-height:50px}
       .bulletin table{break-inside:avoid;page-break-inside:avoid}
     </style></head><body>${pages}
     <script>window.onload=()=>{window.focus();window.print();};<\/script>
@@ -1254,9 +1299,11 @@ if(e==="ANNUEL"){
    <h3 class="centre">BULLETIN DE NOTES — ANNÉE SCOLAIRE 2026-2027</h3>
    <p><b>Classe :</b> ${escHTML(c)} &nbsp; <b>Évaluation :</b> ${escHTML(e)}</p>
    <p><b>Élève :</b> ${escHTML(s.nom)} ${escHTML(s.prenom)}</p>
-   <p><b>Matricule :</b> ${escHTML(s.matricule||"—")} &nbsp;
+   <div class="student-info-print"><div><p><b>Matricule :</b> ${escHTML(s.matricule||"—")} &nbsp;
     <b>Sexe :</b> ${escHTML(s.sexe||"—")} &nbsp;
     <b>Date de naissance :</b> ${escHTML(s.date||"—")}</p>
+    <p><b>Lieu de naissance :</b> ${escHTML(s.birthPlace||"—")}</p></div>
+    <div class="print-student-photo">${s.photo?`<img src="${s.photo}" alt="Photo">`:"PHOTO"}</div></div>
    <table><thead><tr><th>Matière</th><th>Note</th><th>Barème</th></tr></thead>
    <tbody>${ss.map(([n,m])=>`<tr><td>${escHTML(n)}</td><td>${g[n]??"—"}</td><td>${m}</td></tr>`).join("")}
    <tr><th>TOTAL</th><th>${r.complete?r.total:"—"}</th><th>${r.max}</th></tr>
@@ -1267,7 +1314,10 @@ if(e==="ANNUEL"){
    <p><b>Observation du directeur :</b> _____________________________________</p>
    <div class="signatures">
     <div>Signature de l'enseignant</div>
-    <div>Signature et cachet du directeur</div>
+    <div>Signature et cachet du directeur
+      <div class="official-signature">${db.school.directorSignature?`<img src="${db.school.directorSignature}" alt="Signature">`:""}${db.school.stamp?`<img class="stamp-img" src="${db.school.stamp}" alt="Cachet">`:""}</div>
+      <p>${escHTML(db.school.director||"")}</p>
+    </div>
    </div>
   </section>`;
  }).join("");
@@ -1293,7 +1343,13 @@ if(e==="ANNUEL"){
  th,td{border:1px solid #555;padding:6px;text-align:left}
  th{background:#eef2f6}
  .signatures{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px;break-inside:avoid;page-break-inside:avoid}
- .signatures div{width:auto;min-height:95px;border:1px solid #555;padding:8px;text-align:center;font-weight:bold;font-size:10pt}
+  .signatures div{width:auto;min-height:95px;border:1px solid #555;padding:8px;text-align:center;font-weight:bold;font-size:10pt}
+ .student-info-print{display:grid;grid-template-columns:1fr 25mm;gap:4mm;align-items:start}
+ .print-student-photo{width:25mm;height:32mm;border:1px solid #777;display:flex;align-items:center;justify-content:center;font-size:8pt;overflow:hidden}
+ .print-student-photo img{width:100%;height:100%;object-fit:cover}
+ .official-signature{display:flex;justify-content:center;align-items:center;gap:5px;min-height:35px}
+ .official-signature img{max-width:70px;max-height:45px;object-fit:contain}
+ .official-signature .stamp-img{max-width:50px;max-height:50px}
  .bulletin{min-height:260mm;position:relative}
  .bulletin table{break-inside:avoid;page-break-inside:avoid}
  .bulletin p{margin:7px 0}
@@ -1325,36 +1381,50 @@ function renderCards(){
         grid-template-rows:repeat(3,1fr);
         max-width:900px;
         margin:16px auto;
+        gap:10px;
       }
       .school-card {
         box-sizing:border-box;
         height:250px;
         padding:10px;
-        border:1px dashed #777;
+        border:2px dashed #ef861c;
+        border-radius:16px;
         color:#172b43;
+        background:#fff8ed;
         font-family:Arial,sans-serif;
         overflow:hidden;
+        box-shadow:inset 0 0 0 2px #f7d59a;
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
       }
       .card-heading {
         text-align:center;
-        border-bottom:2px solid #087f70;
-        padding-bottom:5px;
+        border-top:5px solid #ef861c;
+        border-bottom:2px solid #d9a52e;
+        border-radius:9px 9px 0 0;
+        padding:5px 4px 6px;
+        background:#fff0d9;
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
       }
-      .school-name {font-size:14px;font-weight:bold}
-      .school-location {font-size:9px;margin-top:3px}
-      .card-title {font-size:11px;font-weight:bold;margin-top:4px}
+      .school-name {font-size:14px;font-weight:bold;color:#17365d}
+      .school-location {font-size:9px;margin-top:3px;color:#4a5568}
+      .card-title {font-size:11px;font-weight:bold;margin-top:5px;color:#b85b00;background:#ffe0b2;border-radius:7px;padding:4px}
       .card-body {display:flex;gap:10px;margin-top:10px}
       .student-photo {
         width:75px;height:92px;flex-shrink:0;
-        border:1px solid #888;
+        border:2px solid #ef861c;
+        border-radius:9px;
+        background:#fff;
         display:flex;align-items:center;justify-content:center;
+        overflow:hidden;
       }
-      .student-photo img {width:100%;height:100%;object-fit:cover}
+      .student-photo img {width:100%;height:100%;object-fit:cover;border-radius:6px}
       .student-info {font-size:10px;line-height:1.7;overflow-wrap:anywhere}
       .card-footer {
         display:flex;justify-content:space-between;
         gap:5px;margin-top:9px;padding-top:5px;
-        border-top:1px solid #ddd;font-size:9px;
+        border-top:1px solid #e5b96b;font-size:9px;color:#17365d;
       }
       @media print {
         @page {size:A4 portrait;margin:8mm}
@@ -1362,11 +1432,14 @@ function renderCards(){
           height:279mm;
           grid-template-rows:repeat(3,1fr);
           margin:0;
+          gap:2mm;
           break-after:page;
         }
         .card-sheet:last-child {break-after:auto}
-        .school-card {height:auto;padding:7px}
-        .student-photo {width:65px;height:82px}
+        .school-card {height:auto;padding:7px;border:2px dashed #ef861c;border-radius:4mm;background:#fff8ed !important;}
+        .card-heading {border-top:1.5mm solid #ef861c;background:#fff0d9 !important;}
+        .card-title {background:#ffe0b2 !important;color:#b85b00 !important;}
+        .student-photo {width:65px;height:82px;border-color:#ef861c;border-radius:2mm}
       }
     </style>
     <div id="cardsPrint">
@@ -1396,7 +1469,8 @@ function renderCards(){
       html += '<b>Prénoms :</b> ' + esc(s.prenom) + '<br>';
       html += '<b>Classe :</b> ' + esc(s.classe) + '<br>';
       html += '<b>Matricule :</b> ' + esc(s.matricule || "—") + '<br>';
-      html += '<b>Né(e) le :</b> ' + esc(s.date || "—");
+      html += '<b>Né(e) le :</b> ' + esc(s.date || "—") + '<br>';
+      html += '<b>Lieu :</b> ' + esc(s.birthPlace || "—");
       html += '</div></div>';
       html += '<div class="card-footer"><span>Année : 2026-2027</span>';
       html += '<span>Signature du directeur</span></div>';
@@ -1476,8 +1550,20 @@ function printElement(id){
         padding: 5px 6px;
         vertical-align: middle;
       }
-      .student-identity th { background: #f2f5f8; width: 20%; }
+            .student-identity th { background: #f2f5f8; width: 20%; }
       .student-identity td { width: 30%; }
+      .bulletin-student-block{display:grid;grid-template-columns:minmax(0,1fr) 25mm;gap:3mm;align-items:start}
+      .bulletin-student-photo{width:25mm;height:32mm;border:1px solid #777;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:8pt;text-align:center}
+      .bulletin-student-photo img{width:100%;height:100%;object-fit:cover}
+      .official-signature{display:flex;justify-content:center;align-items:center;gap:8px;min-height:35px}
+      .official-signature img{max-width:70px;max-height:45px;object-fit:contain}
+      .official-signature .stamp-img{max-width:55px;max-height:55px}
+      .bulletin-student-block{display:grid;grid-template-columns:minmax(0,1fr) 25mm;gap:3mm;align-items:start}
+      .bulletin-student-photo{width:25mm;height:32mm;border:1px solid #777;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:8pt;text-align:center}
+      .bulletin-student-photo img{width:100%;height:100%;object-fit:cover}
+      .official-signature{display:flex;justify-content:center;align-items:center;gap:8px;min-height:35px}
+      .official-signature img{max-width:70px;max-height:45px;object-fit:contain}
+      .official-signature .stamp-img{max-width:55px;max-height:55px}
       .bulletin-grades th:nth-child(2), .bulletin-grades td:nth-child(2),
       .bulletin-grades th:nth-child(3), .bulletin-grades td:nth-child(3) { text-align: center; }
       .total-row, .mean-row { background: #eef4f8; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -1528,30 +1614,33 @@ function printElement(id){
         display: grid !important;
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
-        gap: 0 !important; margin: 0 !important; padding: 0 !important;
+        gap: 2mm !important; margin: 0 !important; padding: 0 !important;
         break-after: page; page-break-after: always; overflow: hidden;
       }
       .card-sheet:last-child { break-after: auto; page-break-after: auto; }
       .school-card {
         display: block !important; width: 100% !important; height: 100% !important;
         min-width: 0 !important; min-height: 0 !important; margin: 0 !important;
-        padding: 5mm !important; border: 1px dashed #333 !important;
+        padding: 3mm !important; border: 2px dashed #ef861c !important; border-radius: 4mm !important;
         overflow: hidden !important; break-inside: avoid; page-break-inside: avoid;
-        font-family: Arial, sans-serif; background: white !important; color: #172b43 !important;
+        font-family: Arial, sans-serif; background: #fff8ed !important; color: #172b43 !important;
+        -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+        box-shadow: inset 0 0 0 1px #f7d59a !important;
       }
-      .card-heading { text-align: center; border-bottom: 1.5px solid #087f70; padding-bottom: 2mm; }
-      .school-name { font-size: 11pt; font-weight: bold; }
+      .card-heading { text-align: center; border-top: 1.5mm solid #ef861c; border-bottom: 1px solid #d9a52e; border-radius: 2mm 2mm 0 0; padding: 1mm 1mm 2mm; background: #fff0d9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .school-name { font-size: 11pt; font-weight: bold; color: #17365d !important; }
       .school-location { font-size: 8pt; margin-top: 1mm; }
-      .card-title { font-size: 9pt; font-weight: bold; margin-top: 2mm; }
-      .card-body { display: flex !important; align-items: flex-start; gap: 3mm; margin-top: 4mm; }
+      .card-title { font-size: 9pt; font-weight: bold; margin-top: 1mm; padding: 1mm; color: #b85b00 !important; background: #ffe0b2 !important; border-radius: 2mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .card-body { display: flex !important; align-items: flex-start; gap: 3mm; margin-top: 3mm; }
       .student-photo {
         width: 25mm !important; height: 32mm !important; flex: 0 0 25mm !important;
-        border: 1px solid #777; display: flex; align-items: center; justify-content: center;
+        border: 2px solid #ef861c !important; border-radius: 2mm !important; background: #fff !important;
+        display: flex; align-items: center; justify-content: center;
         overflow: hidden; font-size: 8pt;
       }
-      .student-photo img { width: 100%; height: 100%; object-fit: cover; }
+      .student-photo img { width: 100%; height: 100%; object-fit: cover; border-radius: 1mm; }
       .student-info { flex: 1; min-width: 0; font-size: 8.5pt; line-height: 1.8; overflow-wrap: anywhere; }
-      .card-footer { display: flex !important; justify-content: space-between; gap: 2mm; margin-top: 3mm; padding-top: 2mm; border-top: 1px solid #bbb; font-size: 7.5pt; }
+      .card-footer { display: flex !important; justify-content: space-between; gap: 2mm; margin-top: 3mm; padding-top: 2mm; border-top: 1px solid #e5b96b; font-size: 7.5pt; color: #17365d !important; }
     ` : ""}
   `;
 
