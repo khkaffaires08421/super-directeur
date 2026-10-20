@@ -1683,5 +1683,15 @@ function restoreData(){
 }
 setupSelects();loadSchool();updateStats();renderStudents();renderGradeForm();renderResults();renderStatistics();fillBulletinStudents();renderCards();
 </script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./service-worker.js')
+      .catch(function (error) {
+        console.error('Erreur service worker :', error);
+      });
+  });
+}
+</script>
 </body>
 </html>
