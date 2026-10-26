@@ -83,6 +83,14 @@ footer{text-align:center;padding:20px;color:#667085;font-size:12px}
 .bulletin table tr:last-child{background:#e8f7ee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .bulletin .signatures>div{border:1px solid #13804a!important}
 @media print{.bulletin-document,.bulletin th,.bulletin h3{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+
+/* Cachet et signature : grands, sans cadre, transparents et accolés */
+.official-signature{display:flex!important;justify-content:center!important;align-items:center!important;gap:0!important;min-height:72px!important;background:transparent!important;border:0!important;padding:0!important;line-height:0!important}
+.official-signature img{display:block!important;max-width:none!important;max-height:none!important;width:120px!important;height:76px!important;object-fit:contain!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.official-signature .stamp-img{width:88px!important;height:88px!important;margin-right:-5px!important;z-index:2;position:relative}
+.official-signature img:not(.stamp-img){margin-left:-2px!important;position:relative;z-index:1}
+.bulletin .signatures>div:has(.official-signature){border:0!important;background:transparent!important}
+.director-document-mark{border:0!important;background:transparent!important}
 </style>
 </head>
 <body>
@@ -142,10 +150,11 @@ footer{text-align:center;padding:20px;color:#667085;font-size:12px}
 <div><label>Localité</label><input id="schoolTown" placeholder="Village / ville"></div>
 <div><label>Cachet officiel de l'école (PNG/JPG)</label><input type="file" id="schoolStampFile" accept="image/png,image/jpeg"></div>
 <div><label>Signature du directeur (PNG/JPG)</label><input type="file" id="directorSignatureFile" accept="image/png,image/jpeg"></div>
+<div><label>Armoiries / emblème officiel (PNG/JPG)</label><input type="file" id="schoolEmblemFile" accept="image/png,image/jpeg"></div>
 </div>
 <p class="small">Images de moins de 400 Ko chacune. Elles seront conservées sur cet appareil et incluses dans la sauvegarde JSON.</p>
-<div class="grid"><div id="stampPreviewBox" class="small"></div><div id="signaturePreviewBox" class="small"></div></div>
-<div class="actions"><button class="good" onclick="saveSchool()">Enregistrer les informations</button><button onclick="clearSchoolImage('stamp')">Retirer le cachet</button><button onclick="clearSchoolImage('signature')">Retirer la signature</button></div>
+<div class="grid"><div id="stampPreviewBox" class="small"></div><div id="signaturePreviewBox" class="small"></div><div id="emblemPreviewBox" class="small"></div></div>
+<div class="actions"><button class="good" onclick="saveSchool()">Enregistrer les informations</button><button onclick="clearSchoolImage('stamp')">Retirer le cachet</button><button onclick="clearSchoolImage('signature')">Retirer la signature</button><button onclick="clearSchoolImage('emblem')">Retirer l’emblème</button></div>
 <p id="schoolMsg" class="small"></p>
 </div>
 </section>
@@ -325,7 +334,7 @@ footer{text-align:center;padding:20px;color:#667085;font-size:12px}
 "use strict";
 const CLASSES=["CP1","CP2","CE1","CE2","CM1","CM2"];
 const DBKEY="SUPER_DIRECTEUR_2026_2027_V1";
-const defaultDB={school:{name:"",iepp:"",drena:"",director:"",phone:"",town:"",stamp:"",directorSignature:""},students:[],grades:{}};
+const defaultDB={school:{name:"",iepp:"",drena:"",director:"",phone:"",town:"",stamp:"",directorSignature:"",emblem:""},students:[],grades:{}};
 let db=loadDB();
 let pendingPhoto=null;
 
@@ -410,18 +419,22 @@ function loadSchool(){
  setval("schoolDrena",db.school.drena);setval("directorName",db.school.director);
  setval("schoolPhone",db.school.phone);setval("schoolTown",db.school.town);
  renderSchoolImagePreviews();
+ applyAppWatermark();
 }
 function renderSchoolImagePreviews(){
- const stamp=document.getElementById("stampPreviewBox"),sig=document.getElementById("signaturePreviewBox");
+ const stamp=document.getElementById("stampPreviewBox"),sig=document.getElementById("signaturePreviewBox"),emblem=document.getElementById("emblemPreviewBox");
  if(stamp)stamp.innerHTML=db.school.stamp?'<b>Cachet enregistré :</b><br><img alt="Cachet" style="max-width:150px;max-height:90px;object-fit:contain" src="'+db.school.stamp+'">':'Aucun cachet importé.';
  if(sig)sig.innerHTML=db.school.directorSignature?'<b>Signature enregistrée :</b><br><img alt="Signature" style="max-width:180px;max-height:70px;object-fit:contain" src="'+db.school.directorSignature+'">':'Aucune signature importée.';
+  if(emblem)emblem.innerHTML=db.school.emblem?'<b>Emblème enregistré :</b><br><img alt="Emblème" style="max-width:120px;max-height:100px;object-fit:contain" src="'+db.school.emblem+'">':'Aucun emblème importé.';
 }
 function clearSchoolImage(kind){
  if(kind==="stamp")db.school.stamp="";
- else db.school.directorSignature="";
- persist();renderSchoolImagePreviews();
+ else if(kind==="signature")db.school.directorSignature="";
+  else db.school.emblem="";
+ persist();renderSchoolImagePreviews();if(kind==="emblem")applyAppWatermark();
  if(kind==="stamp")document.getElementById("schoolStampFile").value="";
- else document.getElementById("directorSignatureFile").value="";
+ else if(kind==="signature")document.getElementById("directorSignatureFile").value="";
+  else document.getElementById("schoolEmblemFile").value="";
 }
 function readSchoolImage(inputId,field){
  const input=document.getElementById(inputId);
@@ -431,17 +444,42 @@ function readSchoolImage(inputId,field){
   if(f.size>400000){alert("Image trop lourde. Choisis une image de moins de 400 Ko.");input.value="";return;}
   const reader=new FileReader();
   reader.onload=()=>{
-   db.school={...defaultDB.school,...db.school,[field]:reader.result};
-   try{persist();renderSchoolImagePreviews();document.getElementById("schoolMsg").textContent="Image enregistrée.";}
-   catch(err){alert("Le stockage est plein. Réduis la taille de l'image puis réessaie.");}
+   const saveImage=(data)=>{
+    db.school={...defaultDB.school,...db.school,[field]:data};
+    try{persist();renderSchoolImagePreviews();if(field==="emblem")applyAppWatermark();document.getElementById("schoolMsg").textContent=(field==="stamp"||field==="directorSignature")?"Image enregistrée. Le fond clair a été rendu transparent lorsque possible.":"Image enregistrée.";}
+    catch(err){alert("Le stockage est plein. Réduis la taille de l'image puis réessaie.");}
+   };
+   if(field!=="stamp"&&field!=="directorSignature"){saveImage(reader.result);return;}
+   const img=new Image();
+   img.onload=()=>{
+    try{
+     const canvas=document.createElement("canvas");canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
+     const ctx=canvas.getContext("2d",{willReadFrequently:true});ctx.drawImage(img,0,0);
+     const pixels=ctx.getImageData(0,0,canvas.width,canvas.height),d=pixels.data;
+     for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2],min=Math.min(r,g,b),max=Math.max(r,g,b);if(r>232&&g>232&&b>232&&(max-min)<28){d[i+3]=0;}else if(r>210&&g>210&&b>210&&(max-min)<18){d[i+3]=Math.min(d[i+3],Math.round((255-Math.min(r,g,b))*5));}}
+     ctx.putImageData(pixels,0,0);saveImage(canvas.toDataURL("image/png"));
+    }catch(err){saveImage(reader.result);}
+   };
+   img.onerror=()=>saveImage(reader.result);img.src=reader.result;
   };
   reader.readAsDataURL(f);
  });
 }
 readSchoolImage("schoolStampFile","stamp");
 readSchoolImage("directorSignatureFile","directorSignature");
+readSchoolImage("schoolEmblemFile","emblem");
 function val(id){return document.getElementById(id).value.trim();}
 function setval(id,v){document.getElementById(id).value=v||"";}
+function applyAppWatermark(){
+  const emblem=db.school&&db.school.emblem;
+  document.body.style.backgroundImage=emblem
+    ? 'linear-gradient(rgba(255,248,241,.94),rgba(255,248,241,.94)),url("'+emblem+'")'
+    : '';
+  document.body.style.backgroundPosition='center,center';
+  document.body.style.backgroundRepeat='no-repeat,no-repeat';
+  document.body.style.backgroundSize='cover, min(38vw,360px) auto';
+  document.body.style.backgroundAttachment='fixed,fixed';
+}
 function clearStudentForm(){
  ["editId","studentNom","studentPrenom","studentDate","studentBirthPlace","studentMatricule"].forEach(x=>setval(x,""));
  setval("studentSexe","");pendingPhoto=null;document.getElementById("studentPhoto").value="";
@@ -871,7 +909,7 @@ if(e==="ANNUEL"){
  const teacher=esc(db.school.teacher||"—");
 
  out.innerHTML=`
- <div id="bulletinPrint" class="bulletin-document">
+ <div id="bulletinPrint" class="bulletin-document" style="${db.school.emblem?`background-image:linear-gradient(rgba(255,255,255,.91),rgba(255,255,255,.91)),url('${db.school.emblem}');background-position:center;background-repeat:no-repeat;background-size:100% 100%,115mm auto;`:``}">
 
    <div class="bulletin-header">
      <div class="header-left">
@@ -947,8 +985,8 @@ if(e==="ANNUEL"){
        <div class="observation-space"></div>
        <p style="text-align:center;font-weight:bold;margin-bottom:3px">Signature et cachet du directeur</p>
        <div class="official-signature director-document-mark">
-         ${db.school.directorSignature?`<img src="${db.school.directorSignature}" alt="Signature du directeur">`:""}
          ${db.school.stamp?`<img class="stamp-img" src="${db.school.stamp}" alt="Cachet officiel de l'école">`:""}
+         ${db.school.directorSignature?`<img src="${db.school.directorSignature}" alt="Signature du directeur">`:""}
        </div>
        <p style="text-align:center">${director}</p>
      </div>
@@ -1154,7 +1192,7 @@ function renderAnnualBulletin(){
   ).join("");
 
   out.innerHTML=`
-  <div id="bulletinPrint" class="bulletin-document">
+  <div id="bulletinPrint" class="bulletin-document" style="${db.school.emblem?`background-image:linear-gradient(rgba(255,255,255,.91),rgba(255,255,255,.91)),url('${db.school.emblem}');background-position:center;background-repeat:no-repeat;background-size:100% 100%,115mm auto;`:``}">
     <div class="bulletin-header">
       <div>MINISTÈRE DE L'ÉDUCATION NATIONALE</div>
       <div style="text-align:right">
@@ -1242,7 +1280,7 @@ function printAllAnnualBulletins(){
       :a.mean/a.scale>=0.50?"Assez bien"
       :"À renforcer";
 
-    return `<section class="bulletin">
+    return `<section class="bulletin" style="${db.school.emblem?`background-image:linear-gradient(rgba(255,255,255,.91),rgba(255,255,255,.91)),url('${db.school.emblem}');background-position:center;background-repeat:no-repeat;background-size:100% 100%,115mm auto;`:``}">
       <h2>${esc(db.school.name||"ÉCOLE PRIMAIRE")}</h2>
       <p style="text-align:center">BULLETIN ANNUEL — 2026-2027</p>
       <p><b>Classe :</b> ${esc(c)}
@@ -1269,7 +1307,7 @@ function printAllAnnualBulletins(){
       <div class="signatures">
         <div>Signature du maître</div>
         <div>Signature et cachet du directeur
-          <div class="official-signature">${db.school.directorSignature?`<img src="${db.school.directorSignature}" alt="Signature">`:""}${db.school.stamp?`<img class="stamp-img" src="${db.school.stamp}" alt="Cachet">`:""}</div>
+          <div class="official-signature">${db.school.stamp?`<img class="stamp-img" src="${db.school.stamp}" alt="Cachet">`:""}${db.school.directorSignature?`<img src="${db.school.directorSignature}" alt="Signature">`:""}</div>
           <p>${esc(db.school.director||"")}</p>
         </div>
       </div>
@@ -1364,7 +1402,7 @@ if(e==="ANNUEL"){
    :r.mean>=r.scale*0.5?"Assez bien"
    :"À renforcer";
 
-  return `<section class="bulletin">
+  return `<section class="bulletin" style="${db.school.emblem?`background-image:linear-gradient(rgba(255,255,255,.91),rgba(255,255,255,.91)),url('${db.school.emblem}');background-position:center;background-repeat:no-repeat;background-size:100% 100%,115mm auto;`:``}">
    <div class="entete">
     <div>MINISTÈRE DE L'ÉDUCATION NATIONALE, DE L'ALPHABÉTISATION ET DE L'ENSEIGNEMENT TECHNIQUE</div>
     <div>RÉPUBLIQUE DE CÔTE D'IVOIRE<br>Union – Discipline – Travail</div>
@@ -1391,7 +1429,7 @@ if(e==="ANNUEL"){
    <div class="signatures">
     <div>Signature de l'enseignant</div>
     <div>Signature et cachet du directeur
-      <div class="official-signature">${db.school.directorSignature?`<img src="${db.school.directorSignature}" alt="Signature">`:""}${db.school.stamp?`<img class="stamp-img" src="${db.school.stamp}" alt="Cachet">`:""}</div>
+      <div class="official-signature">${db.school.stamp?`<img class="stamp-img" src="${db.school.stamp}" alt="Cachet">`:""}${db.school.directorSignature?`<img src="${db.school.directorSignature}" alt="Signature">`:""}</div>
       <p>${escHTML(db.school.director||"")}</p>
     </div>
    </div>
@@ -1476,7 +1514,7 @@ function renderCards(){
       .card-sheet {
         display:grid;
         grid-template-columns:repeat(2,minmax(0,1fr));
-        grid-template-rows:repeat(3,1fr);
+        grid-template-rows:repeat(4,1fr);
         max-width:900px;
         margin:16px auto;
         gap:10px;
@@ -1531,7 +1569,7 @@ function renderCards(){
         @page {size:A4 portrait;margin:8mm}
         .card-sheet {
           height:279mm;
-          grid-template-rows:repeat(3,1fr);
+          grid-template-rows:repeat(4,1fr);
           margin:0;
           gap:2mm;
           break-after:page;
@@ -1540,7 +1578,7 @@ function renderCards(){
         .school-card {height:auto;padding:7px;border:2px dashed #ef861c;border-radius:4mm;background:#fff8ed !important;}
         .card-heading {border-top:1.5mm solid #ef861c;background:#fff0d9 !important;}
         .card-title {background:#ffe0b2 !important;color:#b85b00 !important;}
-        .student-photo {width:65px;height:82px;border-color:#ef861c;border-radius:2mm}
+        .student-photo {width:19mm;height:24mm;border-color:#ef861c;border-radius:2mm}
       }
     
 /* Palette professionnelle SUPER DIRECTEUR : orange, vert, rose, rouge et violet */
@@ -1568,10 +1606,10 @@ function renderCards(){
     <div id="cardsPrint">
   `;
 
-  for (let i=0; i<list.length; i+=6) {
+  for (let i=0; i<list.length; i+=8) {
     html += '<div class="card-sheet">';
 
-    for (const s of list.slice(i,i+6)) {
+    for (const s of list.slice(i,i+8)) {
       html += '<div class="school-card">';
       html += '<div class="card-heading">';
       html += '<div class="school-name">' + esc(db.school.name || "ÉCOLE PRIMAIRE") + '</div>';
@@ -1743,7 +1781,7 @@ function printElement(id){
         width: 194mm !important; height: 281mm !important;
         display: grid !important;
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
+        grid-template-rows: repeat(4, minmax(0, 1fr)) !important;
         gap: 2mm !important; margin: 0 !important; padding: 0 !important;
         break-after: page; page-break-after: always; overflow: hidden;
       }
@@ -1751,29 +1789,29 @@ function printElement(id){
       .school-card {
         display: block !important; width: 100% !important; height: 100% !important;
         min-width: 0 !important; min-height: 0 !important; margin: 0 !important;
-        padding: 3mm !important; border: 2px dashed #ef861c !important; border-radius: 4mm !important;
+        padding: 2mm !important; border: 1.2px dashed #ef861c !important; border-radius: 2mm !important;
         overflow: hidden !important; break-inside: avoid; page-break-inside: avoid;
         font-family: Arial, sans-serif; background: #fff8ed !important; color: #172b43 !important;
         -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
         box-shadow: inset 0 0 0 1px #f7d59a !important;
       }
       .card-heading { text-align: center; border-top: 1.5mm solid #ef861c; border-bottom: 1px solid #d9a52e; border-radius: 2mm 2mm 0 0; padding: 1mm 1mm 2mm; background: #fff0d9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .school-name { font-size: 11pt; font-weight: bold; color: #17365d !important; }
-      .school-location { font-size: 8pt; margin-top: 1mm; }
-      .card-title { font-size: 9pt; font-weight: bold; margin-top: 1mm; padding: 1mm; color: #b85b00 !important; background: #ffe0b2 !important; border-radius: 2mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .school-name { font-size: 8pt; font-weight: bold; color: #17365d !important; }
+      .school-location { font-size: 6pt; margin-top: 1mm; }
+      .card-title { font-size: 7pt; font-weight: bold; margin-top: 1mm; padding: 1mm; color: #b85b00 !important; background: #ffe0b2 !important; border-radius: 2mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .card-footer{display:flex!important;justify-content:space-between!important;align-items:center!important;gap:2mm!important;font-size:7pt!important;margin-top:2mm!important;padding-top:1mm!important}
       .card-director-mark{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:1mm!important;min-width:12mm!important;max-width:23mm!important;height:7mm!important;overflow:hidden!important}
       .card-director-mark img{display:block!important;max-width:11mm!important;max-height:6mm!important;object-fit:contain!important}
       .card-director-mark .stamp-img{max-width:6mm!important;max-height:6mm!important}
-      .card-body { display: flex !important; align-items: flex-start; gap: 3mm; margin-top: 3mm; }
+      .card-body { display: flex !important; align-items: flex-start; gap: 2mm; margin-top: 1.5mm; }
       .student-photo {
-        width: 25mm !important; height: 32mm !important; flex: 0 0 25mm !important;
+        width: 19mm !important; height: 24mm !important; flex: 0 0 19mm !important;
         border: 2px solid #ef861c !important; border-radius: 2mm !important; background: #fff !important;
         display: flex; align-items: center; justify-content: center;
         overflow: hidden; font-size: 8pt;
       }
       .student-photo img { width: 100%; height: 100%; object-fit: cover; border-radius: 1mm; }
-      .student-info { flex: 1; min-width: 0; font-size: 8.5pt; line-height: 1.8; overflow-wrap: anywhere; }
+      .student-info { flex: 1; min-width: 0; font-size: 6.5pt; line-height: 1.45; overflow-wrap: anywhere; }
       .card-footer { display: flex !important; justify-content: space-between; gap: 2mm; margin-top: 3mm; padding-top: 2mm; border-top: 1px solid #e5b96b; font-size: 7.5pt; color: #17365d !important; }
     ` : ""}
   `;
