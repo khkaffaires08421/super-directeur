@@ -4,6 +4,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#13804a">
 <title>SUPER DIRECTEUR — 2026-2027</title>
 <style>
 :root{--bleu:#4b247c;--vert:#13804a;--fond:#fff8f1;--orange:#f58220;--rose:#e83e8c;--rouge:#d92d20;--violet:#6d28d9}
@@ -1852,6 +1854,17 @@ function restoreData(){
  reader.readAsText(f);
 }
 setupSelects();loadSchool();updateStats();renderStudents();renderGradeForm();renderResults();renderStatistics();fillBulletinStudents();renderCards();
+</script>
+
+<script>
+// Installation hors ligne : enregistre le cache de l'application sur GitHub Pages.
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js', {scope: './'})
+      .then(function (registration) { registration.update().catch(function () {}); })
+      .catch(function (error) { console.warn('Service worker non enregistré :', error); });
+  });
+}
 </script>
 </body>
 </html>
