@@ -93,9 +93,66 @@ footer{text-align:center;padding:20px;color:#667085;font-size:12px}
 .official-signature img:not(.stamp-img){margin-left:-2px!important;position:relative;z-index:1}
 .bulletin .signatures>div:has(.official-signature){border:0!important;background:transparent!important}
 .director-document-mark{border:0!important;background:transparent!important}
+
+/* Tableau de bord professionnel et graphiques 100 % hors ligne */
+.dashboard-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;background:linear-gradient(120deg,#fff 0%,#f0fdf4 48%,#fff7ed 100%);border:1px solid #d9e8e0;border-top:5px solid #13804a}
+.dashboard-kicker{font-size:11px;font-weight:800;letter-spacing:1.5px;color:#13804a}
+.dashboard-hero h2{font-size:clamp(23px,3vw,32px);margin:8px 0;color:#17365d}
+.dashboard-hero p,.chart-heading p{margin:5px 0 0;color:#667085}
+.dashboard-controls{min-width:220px}.dashboard-controls label{font-size:12px;color:#526174}.dashboard-controls select{font-weight:700}
+.dashboard-kpis{margin-bottom:16px}.dashboard-kpis .stat{min-height:125px;padding:18px;border:0;border-radius:15px;box-shadow:0 6px 22px #18304a0d}
+.dashboard-kpis .stat strong{font-size:clamp(25px,3vw,34px);margin:9px 0 3px}
+.kpi-label{font-size:13px;font-weight:700;color:#526174}.dashboard-kpis small{font-size:11px;color:#667085}
+.kpi-blue{background:#eff6ff!important;border-top:4px solid #2563eb!important}.kpi-blue strong{color:#1d4ed8!important}
+.kpi-green{background:#ecfdf3!important;border-top:4px solid #16a34a!important}.kpi-green strong{color:#15803d!important}
+.kpi-red{background:#fff1f2!important;border-top:4px solid #e11d48!important}.kpi-red strong{color:#be123c!important}
+.kpi-purple{background:#f5f3ff!important;border-top:4px solid #7c3aed!important}.kpi-purple strong{color:#6d28d9!important}
+.dashboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.chart-panel{min-width:0}.chart-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:16px}
+.chart-heading h3{margin:0;color:#17365d;font-size:17px}.chart-heading p{font-size:12px}
+.chart-chip{background:#e0f2fe;color:#075985;border-radius:99px;padding:6px 10px;font-size:11px;font-weight:800;white-space:nowrap}
+.pie-layout{display:flex;align-items:center;justify-content:center;gap:24px;min-height:180px;flex-wrap:wrap}
+.pie-chart{width:154px;height:154px;border-radius:50%;background:conic-gradient(#dbe4ee 0% 100%);display:grid;place-items:center;position:relative;flex:0 0 154px}
+.pie-chart:after{content:"";position:absolute;width:92px;height:92px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px #eef2f7}
+.pie-chart span{position:relative;z-index:1;font-weight:800;font-size:22px;color:#17365d}
+.chart-legend{display:grid;gap:10px;min-width:130px}.legend-row{display:flex;align-items:center;gap:8px;font-size:12px;color:#475467}
+.legend-dot{width:10px;height:10px;border-radius:3px;display:inline-block;flex:0 0 10px}.legend-row b{margin-left:auto;color:#172b43;padding-left:8px}
+.analysis-note{font-size:12px;line-height:1.5;color:#526174;background:#f8fafc;border-radius:9px;padding:10px;margin:14px 0 0}
+.bar-chart{display:grid;gap:14px}.bar-row{display:grid;grid-template-columns:58px minmax(0,1fr) 55px;align-items:center;gap:10px}.bar-label{font-size:12px;font-weight:800;color:#344054}.bar-track{height:17px;background:#eef2f7;border-radius:99px;overflow:hidden;display:flex}.bar-segment{height:100%;transition:width .25s}.bar-value{text-align:right;font-size:12px;font-weight:800;color:#344054}.bar-sub{grid-column:2/4;margin-top:-9px;font-size:10px;color:#667085}
+.appreciation-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.appreciation-card{padding:12px;border-radius:10px;background:#f8fafc;border:1px solid #e7edf3}.appreciation-card strong{display:block;font-size:22px;color:#17365d}.appreciation-card span{font-size:11px;color:#526174}.appreciation-card .appreciation-percent{font-size:10px;font-weight:700;margin-top:4px}
+.insights-list{display:grid;gap:9px}.insight{padding:12px 14px;border-radius:10px;background:#f8fafc;border-left:4px solid #64748b;font-size:13px;line-height:1.5;color:#344054}.insight.good{border-left-color:#16a34a;background:#f0fdf4}.insight.warn{border-left-color:#f59e0b;background:#fffbeb}.insight.alert{border-left-color:#e11d48;background:#fff1f2}
+.dashboard-class-table{min-width:760px}.dashboard-class-table th{background:#17365d;color:white}.dashboard-class-table tfoot{font-weight:800;background:#eff6ff}
+@media(max-width:760px){.dashboard-hero{align-items:stretch;flex-direction:column}.dashboard-controls{min-width:0}.dashboard-grid{grid-template-columns:1fr}.appreciation-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pie-layout{gap:15px}}
+@media print{.dashboard-hero{display:block}.dashboard-grid{grid-template-columns:1fr 1fr}.pie-chart{print-color-adjust:exact;-webkit-print-color-adjust:exact}.bar-segment,.pie-chart{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+
+/* Accès de démarrage — écran de connexion hors ligne */
+#sd-login-gate{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#0f766e,#17365d 58%,#f59e0b);font-family:Arial,sans-serif}
+#sd-login-card{width:min(100%,420px);background:#fff;border-radius:22px;padding:30px;box-shadow:0 24px 70px #071d2b66;color:#17365d}
+#sd-login-card h2{margin:0 0 8px;font-size:25px}#sd-login-card p{color:#526174;line-height:1.5}
+#sd-login-card label{display:block;margin:16px 0 6px;font-weight:700;font-size:13px}
+#sd-login-card input{box-sizing:border-box;width:100%;padding:13px 14px;border:1px solid #cbd5e1;border-radius:10px;font-size:16px;outline-color:#0f766e}
+#sd-login-card button{width:100%;margin-top:20px;border:0;border-radius:10px;padding:14px;background:#0f766e;color:#fff;font-size:15px;font-weight:800;cursor:pointer}
+#sd-login-error{display:none;color:#b91c1c!important;background:#fef2f2;border-radius:8px;padding:10px;font-size:13px}
+
 </style>
 </head>
 <body>
+<div id="sd-login-gate" role="dialog" aria-modal="true" aria-labelledby="sd-login-title">
+  <form id="sd-login-form" autocomplete="on" style="width:100%;display:flex;justify-content:center">
+    <div id="sd-login-card">
+      <div style="font-size:38px;margin-bottom:10px">🎓</div>
+      <h2 id="sd-login-title">SUPER DIRECTEUR</h2>
+      <p>Connexion à votre espace de gestion scolaire — 2026-2027.</p>
+      <label for="sd-login-user">Identifiant</label>
+      <input id="sd-login-user" name="username" autocomplete="username" required placeholder="Votre identifiant">
+      <label for="sd-login-pass">Mot de passe</label>
+      <input id="sd-login-pass" name="password" type="password" autocomplete="current-password" required placeholder="Votre mot de passe">
+      <p id="sd-login-error" role="alert">Identifiant ou mot de passe incorrect. Réessayez.</p>
+      <button id="sd-login-submit" type="submit">Se connecter</button>
+      <p style="font-size:11px;margin:16px 0 0">Accès local à cette application.</p>
+    </div>
+  </form>
+</div>
 <header>
   <h1>🎓 SUPER DIRECTEUR</h1>
   <p>Gestion scolaire — Année scolaire 2026-2027</p>
@@ -116,16 +173,28 @@ footer{text-align:center;padding:20px;color:#667085;font-size:12px}
 </nav>
 
 <section id="accueil" class="page">
-<div class="panel">
-<h2>Tableau de bord</h2>
-<p>Bienvenue dans SUPER DIRECTEUR. Commence par renseigner les informations de ton école, puis enregistre tes élèves.</p>
-<div class="grid">
-<div class="stat"><strong id="statEleves">0</strong>Élèves enregistrés</div>
-<div class="stat"><strong>6</strong>Niveaux scolaires</div>
-<div class="stat"><strong>4</strong>Compositions par niveau</div>
-<div class="stat"><strong>2026-2027</strong>Année scolaire</div>
+<div class="panel dashboard-hero">
+<div><span class="dashboard-kicker">PILOTAGE SCOLAIRE · 2026-2027</span>
+<h2 id="dashboardSchoolTitle">Tableau de bord général</h2>
+<p id="dashboardGreeting">Vue d’ensemble de l’école, des effectifs et des performances scolaires.</p></div>
+<div class="dashboard-controls"><label for="dashboardEval">Composition analysée</label><select id="dashboardEval" onchange="renderDashboard()"><option value="C1">Composition 1 (C1)</option><option value="C2">Composition 2 (C2)</option><option value="C3">Composition 3 (C3)</option><option value="C4">Composition 4 (C4)</option></select></div>
 </div>
-<div class="notice"><b>Attention :</b> les données sont conservées sur cet ordinateur et dans ce navigateur. Fais régulièrement une sauvegarde sur une clé USB. Ne supprime pas les données du navigateur sans avoir sauvegardé.</div>
+<div class="grid dashboard-kpis">
+<div class="stat kpi-blue"><span class="kpi-label">Effectif total</span><strong id="dashTotal">0</strong><small>Élèves enregistrés</small></div>
+<div class="stat kpi-green"><span class="kpi-label">Taux de réussite</span><strong id="dashSuccess">—</strong><small id="dashSuccessDetail">Élèves avec notes complètes</small></div>
+<div class="stat kpi-red"><span class="kpi-label">Taux d’échec</span><strong id="dashFailure">—</strong><small>Sur les notes complètes</small></div>
+<div class="stat kpi-purple"><span class="kpi-label">Moyenne générale</span><strong id="dashMean">—</strong><small id="dashMeanScale">Selon le barème de la classe</small></div>
+</div>
+<div class="dashboard-grid">
+<div class="panel chart-panel"><div class="chart-heading"><div><h3>Parité filles / garçons</h3><p>Répartition des élèves enregistrés</p></div><span class="chart-chip" id="dashParityBadge">À analyser</span></div><div class="pie-layout"><div id="dashSexPie" class="pie-chart"><span>0</span></div><div id="dashSexLegend" class="chart-legend"></div></div><p class="analysis-note" id="dashParityText">Enregistre le sexe des élèves pour obtenir l’analyse de parité.</p></div>
+<div class="panel chart-panel"><div class="chart-heading"><div><h3>Réussite et échec</h3><p id="dashResultSubtitle">Résultats de la composition sélectionnée</p></div></div><div class="pie-layout"><div id="dashResultPie" class="pie-chart pie-results"><span>—</span></div><div id="dashResultLegend" class="chart-legend"></div></div><p class="analysis-note" id="dashResultText">Les résultats apparaîtront lorsque les notes seront complètes.</p></div>
+</div>
+<div class="panel chart-panel"><div class="chart-heading"><div><h3>Effectifs par classe</h3><p>Comparaison des niveaux et répartition par sexe</p></div></div><div id="dashClassBars" class="bar-chart"></div></div>
+<div class="panel chart-panel"><div class="chart-heading"><div><h3>Moyenne par classe</h3><p>Uniquement les élèves ayant toutes les notes de la composition sélectionnée</p></div></div><div id="dashMeanBars" class="bar-chart"></div></div>
+<div class="panel chart-panel"><div class="chart-heading"><div><h3>Appréciations scolaires</h3><p>Répartition calculée sur les notes complètes</p></div></div><div id="dashAppreciations" class="appreciation-grid"></div></div>
+<div class="panel chart-panel"><div class="chart-heading"><div><h3>Tableau statistique par niveau</h3><p>Effectifs, parité, moyennes et résultats</p></div></div><div id="dashClassTable" class="tablewrap"></div></div>
+<div class="panel"><h3>Analyse automatique et recommandations</h3><div id="dashInsights" class="insights-list"><div class="insight">Les recommandations apparaîtront à partir des données de l’école.</div></div></div>
+<div class="notice"><b>Sécurité des données :</b> les informations sont conservées dans ce navigateur. Télécharge régulièrement une sauvegarde JSON et garde-la sur une clé USB. Les graphiques reflètent uniquement les données enregistrées.</div>
 </div>
 <div class="panel">
 <h2>Barèmes de notation</h2>
@@ -347,7 +416,7 @@ function loadDB(){
  }catch(e){alert("Les données enregistrées n'ont pas pu être lues.");}
  return JSON.parse(JSON.stringify(defaultDB));
 }
-function persist(){localStorage.setItem(DBKEY,JSON.stringify(db));updateStats();}
+function persist(){localStorage.setItem(DBKEY,JSON.stringify(db));updateStats();renderDashboard();}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function id(){return "E"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 
@@ -404,7 +473,8 @@ function updateStats(){const el=document.getElementById("statEleves");if(el)el.t
 document.querySelectorAll("#nav button").forEach(b=>b.addEventListener("click",()=>{
  document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x===b));
  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("hidden",p.id!==b.dataset.page));
- if(b.dataset.page==="eleves")renderStudents();
+ if(b.dataset.page==="accueil")renderDashboard();
+  if(b.dataset.page==="eleves")renderStudents();
  if(b.dataset.page==="notes")renderGradeForm();
  if(b.dataset.page==="resultats")renderResults();
  if(b.dataset.page==="statistiques")renderStatistics();
@@ -550,6 +620,79 @@ function deleteStudent(studentId){
  Object.keys(db.grades).forEach(k=>{if(k.endsWith("|"+studentId))delete db.grades[k];});
  persist();renderStudents();
 }
+
+function appreciationFor(mean,scale){
+ if(mean===null||mean===undefined)return "Notes incomplètes";
+ const ratio=mean/scale;
+ if(ratio>=.90)return "Excellent";
+ if(ratio>=.80)return "Très bien";
+ if(ratio>=.70)return "Bien";
+ if(ratio>=.50)return "Assez bien";
+ if(ratio>=.30)return "Insuffisant";
+ return "Médiocre";
+}
+function renderDashboard(){
+ const root=document.getElementById("dashTotal");if(!root)return;
+ const evalName=val("dashboardEval")||"C1",students=db.students||[];
+ const boys=students.filter(s=>s.sexe==="Masculin").length, girls=students.filter(s=>s.sexe==="Féminin").length;
+ const unknown=students.length-boys-girls, sexKnown=boys+girls;
+ const complete=[],byClass=CLASSES.map(cl=>{
+  const list=students.filter(s=>s.classe===cl);
+  const completeList=list.map(s=>({...s,...calc(cl,evalName,s.id)})).filter(s=>s.complete);
+  complete.push(...completeList);
+  const means=completeList.map(s=>s.mean),passed=completeList.filter(s=>s.mean>=s.scale/2).length;
+  return {classe:cl,effectif:list.length,garcons:list.filter(s=>s.sexe==="Masculin").length,filles:list.filter(s=>s.sexe==="Féminin").length,inconnu:list.filter(s=>s.sexe!=="Masculin"&&s.sexe!=="Féminin").length,complete:completeList.length,admis:passed,echec:completeList.length-passed,moyenne:means.length?means.reduce((a,b)=>a+b,0)/means.length:null,scale:(cl==="CP1"||cl==="CP2"||cl==="CE1"||cl==="CE2")?10:20};
+ });
+ const passed=complete.filter(s=>s.mean>=s.scale/2).length,failed=complete.length-passed;
+ const success=complete.length?passed/complete.length*100:null, failure=complete.length?failed/complete.length*100:null;
+ const mean=complete.length?complete.reduce((a,s)=>a+s.mean/s.scale*20,0)/complete.length:null;
+ document.getElementById("dashboardSchoolTitle").textContent=db.school.name?("Tableau de bord — "+db.school.name):"Tableau de bord général";
+ document.getElementById("dashboardGreeting").textContent=(db.school.town?"École située à "+db.school.town+" · ":"")+"Vue de pilotage actualisée à partir des données enregistrées.";
+ document.getElementById("dashTotal").textContent=students.length;
+ document.getElementById("dashSuccess").textContent=success===null?"—":fmt(success)+" %";
+ document.getElementById("dashFailure").textContent=failure===null?"—":fmt(failure)+" %";
+ document.getElementById("dashMean").textContent=mean===null?"—":fmt(mean)+"/20";
+ document.getElementById("dashSuccessDetail").textContent=complete.length+" élève(s) avec notes complètes";
+ document.getElementById("dashMeanScale").textContent="Moyenne normalisée sur 20 · "+evalName;
+ const sexPct=sexKnown?girls/sexKnown*100:0;
+ const sexPie=document.getElementById("dashSexPie");
+ sexPie.style.background=sexKnown?`conic-gradient(#ec4899 0 ${sexPct}%,#2563eb ${sexPct}% 100%)`:"conic-gradient(#dbe4ee 0 100%)";
+ sexPie.querySelector("span").textContent=sexKnown?sexKnown:"0";
+ document.getElementById("dashSexLegend").innerHTML=`<div class="legend-row"><i class="legend-dot" style="background:#2563eb"></i>Garçons <b>${boys} (${sexKnown?fmt(boys/sexKnown*100):"0"} %)</b></div><div class="legend-row"><i class="legend-dot" style="background:#ec4899"></i>Filles <b>${girls} (${sexKnown?fmt(girls/sexKnown*100):"0"} %)</b></div>${unknown?`<div class="legend-row"><i class="legend-dot" style="background:#94a3b8"></i>Sexe non renseigné <b>${unknown}</b></div>`:""}`;
+ const parity=Math.abs(boys-girls),parityText=!sexKnown?"Renseigne le sexe des élèves pour analyser la parité.":parity===0?"Parité numérique parfaite entre les filles et les garçons.":`Écart de ${parity} élève(s) entre les garçons et les filles (${boys>girls?"plus de garçons":"plus de filles"}).`;
+ document.getElementById("dashParityText").textContent=parityText+(unknown?` Attention : ${unknown} sexe(s) non renseigné(s).`:"");
+ document.getElementById("dashParityBadge").textContent=!sexKnown?"Données manquantes":parity===0?"Équilibre numérique":`Écart : ${parity}`;
+ const resultPie=document.getElementById("dashResultPie"),passPct=complete.length?passed/complete.length*100:0;
+ resultPie.style.background=complete.length?`conic-gradient(#16a34a 0 ${passPct}%,#e11d48 ${passPct}% 100%)`:"conic-gradient(#dbe4ee 0 100%)";
+ resultPie.querySelector("span").textContent=complete.length?fmt(passPct)+"%":"—";
+ document.getElementById("dashResultLegend").innerHTML=`<div class="legend-row"><i class="legend-dot" style="background:#16a34a"></i>Réussite <b>${passed}</b></div><div class="legend-row"><i class="legend-dot" style="background:#e11d48"></i>Échec <b>${failed}</b></div><div class="legend-row"><i class="legend-dot" style="background:#94a3b8"></i>Notes incomplètes <b>${students.length-complete.length}</b></div>`;
+ document.getElementById("dashResultText").textContent=complete.length?`${passed} admis et ${failed} en difficulté sur ${complete.length} élève(s) évaluables. Le seuil de réussite appliqué est la moitié du barème.`:"Aucun résultat complet pour cette composition. Les notes manquantes ne sont pas comptées comme des échecs.";
+ const maxEffectif=Math.max(1,...byClass.map(r=>r.effectif));
+ document.getElementById("dashClassBars").innerHTML=byClass.map(r=>`<div class="bar-row"><span class="bar-label">${r.classe}</span><div class="bar-track"><span class="bar-segment" style="width:${r.effectif?100*r.garcons/maxEffectif:0}%;background:#2563eb"></span><span class="bar-segment" style="width:${r.effectif?100*r.filles/maxEffectif:0}%;background:#ec4899"></span><span class="bar-segment" style="width:${r.effectif?100*r.inconnu/maxEffectif:0}%;background:#94a3b8"></span></div><span class="bar-value">${r.effectif}</span><span class="bar-sub">Garçons ${r.garcons} · Filles ${r.filles}${r.inconnu?` · Sexe non renseigné ${r.inconnu}`:""}</span></div>`).join("");
+ const maxMean=20;
+ document.getElementById("dashMeanBars").innerHTML=byClass.map(r=>`<div class="bar-row"><span class="bar-label">${r.classe}</span><div class="bar-track"><span class="bar-segment" style="width:${r.moyenne===null?0:Math.max(0,Math.min(100,r.moyenne/r.scale*100))}%;background:${r.moyenne===null?"#cbd5e1":r.moyenne/r.scale>=.5?"#16a34a":"#f59e0b"}"></span></div><span class="bar-value">${r.moyenne===null?"—":fmt(r.moyenne)+"/"+r.scale}</span><span class="bar-sub">${r.complete} résultat(s) complet(s)</span></div>`).join("");
+ const appNames=["Excellent","Très bien","Bien","Assez bien","Insuffisant","Médiocre"],appColors=["#15803d","#0d9488","#2563eb","#d97706","#ea580c","#be123c"];
+ const appCounts=appNames.map(n=>({name:n,count:complete.filter(s=>appreciationFor(s.mean,s.scale)===n).length}));
+ document.getElementById("dashAppreciations").innerHTML=appCounts.map((a,i)=>`<div class="appreciation-card" style="border-top:3px solid ${appColors[i]}"><strong style="color:${appColors[i]}">${a.count}</strong><span>${a.name}</span><div class="appreciation-percent">${complete.length?fmt(a.count/complete.length*100):"0"} %</div></div>`).join("");
+ document.getElementById("dashClassTable").innerHTML=`<table class="dashboard-class-table"><thead><tr><th>Niveau</th><th>Garçons</th><th>Filles</th><th>Total</th><th>Moyenne</th><th>Admis</th><th>Échec</th><th>Réussite</th></tr></thead><tbody>${byClass.map(r=>`<tr><td>${r.classe}</td><td>${r.garcons}</td><td>${r.filles}</td><td>${r.effectif}</td><td>${r.moyenne===null?"—":fmt(r.moyenne)+"/"+r.scale}</td><td>${r.admis}</td><td>${r.echec}</td><td>${r.complete?fmt(r.admis/r.complete*100)+" %":"—"}</td></tr>`).join("")}</tbody><tfoot><tr><td>TOTAL</td><td>${boys}</td><td>${girls}</td><td>${students.length}</td><td>${mean===null?"—":fmt(mean)+"/20"}</td><td>${passed}</td><td>${failed}</td><td>${success===null?"—":fmt(success)+" %"}</td></tr></tfoot></table>`;
+ const insights=[];
+ if(!students.length)insights.push(["warn","Aucun élève n’est encore enregistré. Commence par ajouter les élèves pour activer les statistiques."]);
+ else{
+  if(unknown)insights.push(["warn",`${unknown} élève(s) n’ont pas de sexe renseigné : complète ces fiches pour fiabiliser l’analyse de parité.`]);
+  if(sexKnown){const gap=parity/sexKnown*100;insights.push([gap>15?"warn":"good",gap>15?`L’écart filles-garçons est important (${parity} élève(s), soit ${fmt(gap)} % des élèves dont le sexe est connu). Vérifie si cette répartition reflète les inscriptions réelles.`:`La répartition filles-garçons est relativement équilibrée (écart de ${parity} élève(s)).`]);}
+  if(!complete.length)insights.push(["warn",`Aucune note complète pour ${evalName}. Les taux de réussite et d’échec seront calculés après saisie de toutes les matières.`]);
+  else{
+   const weakest=[...byClass].filter(r=>r.complete).sort((a,b)=>(a.moyenne/a.scale)-(b.moyenne/b.scale))[0];
+   const strongest=[...byClass].filter(r=>r.complete).sort((a,b)=>(b.moyenne/b.scale)-(a.moyenne/a.scale))[0];
+   if(weakest)insights.push([weakest.moyenne/weakest.scale<.5?"alert":"warn",`Classe à surveiller : ${weakest.classe}, moyenne ${fmt(weakest.moyenne)}/${weakest.scale} (${weakest.complete} résultat(s) complet(s)). Prévoir une analyse des difficultés avant de conclure.`]);
+   if(strongest&&strongest.classe!==weakest?.classe)insights.push(["good",`Meilleure moyenne observée : ${strongest.classe} avec ${fmt(strongest.moyenne)}/${strongest.scale}. Examine les pratiques pédagogiques sans supposer que les classes ont le même profil.`]);
+   if(success<50)insights.push(["alert",`Le taux de réussite global est inférieur à 50 % pour ${evalName}. Vérifie les saisies, puis identifie les matières qui nécessitent un soutien.`]);
+   else insights.push(["good",`Le taux de réussite est de ${fmt(success)} % sur les élèves ayant des notes complètes pour ${evalName}.`]);
+  }
+ }
+ document.getElementById("dashInsights").innerHTML=insights.map(([type,msg])=>`<div class="insight ${type}">${esc(msg)}</div>`).join("");
+}
+
 function selectedGradeClass(){return val("noteClasse");}
 function selectedGradeEval(){return val("evaluation");}
 function renderGradeForm(){
@@ -1853,7 +1996,57 @@ function restoreData(){
  };
  reader.readAsText(f);
 }
-setupSelects();loadSchool();updateStats();renderStudents();renderGradeForm();renderResults();renderStatistics();fillBulletinStudents();renderCards();
+setupSelects();loadSchool();updateStats();renderDashboard();renderStudents();renderGradeForm();renderResults();renderStatistics();fillBulletinStudents();renderCards();
+</script>
+
+
+<script>
+/* Connexion locale — initialisation robuste */
+(function () {
+  const AUTH_KEY = 'SUPER_DIRECTEUR_ACCES_OK_2026_2027';
+  const USERNAME = 'KOUAKOUDIABO';
+  const PASSWORD = '08421006xX@';
+
+  function setupLogin() {
+    const gate = document.getElementById('sd-login-gate');
+    const form = document.getElementById('sd-login-form');
+    const user = document.getElementById('sd-login-user');
+    const pass = document.getElementById('sd-login-pass');
+    const error = document.getElementById('sd-login-error');
+    const button = document.getElementById('sd-login-submit');
+    if (!gate || !form || !user || !pass || !error || !button) return;
+
+    function showError(message) {
+      error.textContent = message;
+      error.style.display = 'block';
+    }
+    function unlock() { gate.style.display = 'none'; }
+    try {
+      if (localStorage.getItem(AUTH_KEY) === '1') { unlock(); return; }
+    } catch (e) {}
+
+    function attemptLogin(ev) {
+      if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+      const enteredUser = user.value.trim().toUpperCase();
+      const enteredPass = pass.value;
+      if (enteredUser === USERNAME && enteredPass === PASSWORD) {
+        try { localStorage.setItem(AUTH_KEY, '1'); } catch (e) {}
+        error.style.display = 'none';
+        unlock();
+      } else {
+        showError('Identifiant ou mot de passe incorrect. Vérifie les caractères et réessaie.');
+        pass.value = '';
+        pass.focus();
+      }
+      return false;
+    }
+    form.onsubmit = attemptLogin;
+    button.onclick = attemptLogin;
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupLogin, { once: true });
+  } else { setupLogin(); }
+})();
 </script>
 
 <script>
